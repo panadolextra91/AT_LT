@@ -110,6 +110,48 @@ const deleteUser = async (req, res) => {
     }
   };  
 
+// @desc Login user
+// @route POST /api/users/login
+const loginUser = async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Find user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: 'Invalid username or password' });
+    }
+
+    // Verify the password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // Generate JWT Token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'your_jwt_secret', // Replace with your secret key
+      { expiresIn: '1h' } // Token expires in 1 hour
+    );
+
+    // Log the role and token to the console
+    console.log(`User Role: ${user.role}`);
+    console.log(`JWT Token: ${token}`);
+
+    // Return success response
+    res.status(200).json({
+      message: 'Login successful',
+      role: user.role,
+      token
+    });
+
+  } catch (error) {
+    console.error('Error logging in user:', error.message);
+    res.status(500).json({ message: 'Error logging in', error: error.message });
+  }
+};
+
 // Export controllers
 module.exports = {
   getAllUsers,
@@ -117,4 +159,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  loginUser,
 };
