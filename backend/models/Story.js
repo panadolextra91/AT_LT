@@ -17,6 +17,7 @@ const storySchema = new mongoose.Schema(
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     views: { type: Number, default: 0 },
     status: { type: String, enum: ['dropped', 'ongoing', 'full'], default: 'ongoing' },
+    cover_img: { type: String, default: null },
   },
   { timestamps: true } // Automatically adds createdAt and updatedAt fields
 );

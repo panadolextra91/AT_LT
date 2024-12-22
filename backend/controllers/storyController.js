@@ -74,14 +74,29 @@ const createStory = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized: Please log in to upload stories' });
     }
 
+    // Handle uploaded file for cover image
+    const coverImgPath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // Parse categories safely
+    let parsedCategories = [];
+    try {
+      console.log('Raw categories:', categories);
+      parsedCategories = categories ? JSON.parse(categories) : [];
+      console.log('Parsed categories:', parsedCategories);
+    } catch (error) {
+      console.error('Error parsing categories:', error.message);
+      return res.status(400).json({ message: 'Invalid categories format. Must be a JSON array.' });
+    }
+
     // Create new story
     const newStory = new Story({
       title,
       content,
       author,
       uploader: req.user._id, // From token middleware
-      categories,
+      categories: parsedCategories,
       views: 0,
+      cover_img: coverImgPath, // Save the cover image path
       created_at: Date.now(),
       updated_at: Date.now(),
     });
@@ -89,9 +104,11 @@ const createStory = async (req, res) => {
     const savedStory = await newStory.save();
     res.status(201).json(savedStory);
   } catch (error) {
+    console.error('Error creating story:', error.message);
     res.status(500).json({ message: 'Error creating story', error: error.message });
   }
 };
+
 
 // @desc Update an existing story
 // @route PUT /api/stories/:id
